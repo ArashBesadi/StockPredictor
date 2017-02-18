@@ -1,4 +1,6 @@
 import java.util
+
+import com.typesafe.scalalogging.Logger
 import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
 import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
 import org.apache.spark.ml.linalg.DenseVector
@@ -16,8 +18,11 @@ object StockPredictor {
       .getOrCreate()
 
     val stockTestErrorRate = calculateStockTestErrorRate(spark)
-    val stockPredictionAccuracy = 1 - stockTestErrorRate
-    System.out.println(stockPredictionAccuracy)
+    var stockPredictionAccuracy = 1 - stockTestErrorRate
+
+    stockPredictionAccuracy = BigDecimal(stockPredictionAccuracy).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    val logger = Logger[StockPredictor.type]
+    logger.info("Stock Prediction Accuracy with Logistic Regression: " + BigDecimal(stockPredictionAccuracy) * 100 + "%")
   }
 
   private def calculateStockTestErrorRate(spark: SparkSession): Double = {
