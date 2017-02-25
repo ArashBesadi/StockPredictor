@@ -1,0 +1,1 @@
+Smarket.csv path in Databricks: /FileStore/tables/3rijvcrn1487430775061/Smarket.csv

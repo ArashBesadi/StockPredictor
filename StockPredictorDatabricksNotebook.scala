@@ -1,29 +1,15 @@
-import java.util
+  import java.util
+  import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
+  import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
+  import org.apache.spark.ml.linalg.DenseVector
+  import org.apache.spark.sql.{DataFrame, SparkSession}
+  import org.apache.spark.sql.types._
 
-import com.typesafe.scalalogging.Logger
-import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
-import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
-import org.apache.spark.ml.linalg.DenseVector
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.types._
 
-object StockPredictor {
+  val stockTestErrorRate = calculateStockTestErrorRate(spark)
+  var stockPredictionAccuracy = 1 - stockTestErrorRate
+  stockPredictionAccuracy = BigDecimal(stockPredictionAccuracy).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
 
-  def main(args: Array[String]): Unit = {
-
-    val spark = SparkSession
-      .builder()
-      .master("local")
-      .appName("StockPredictor")
-      .getOrCreate()
-
-    val stockTestErrorRate = calculateStockTestErrorRate(spark)
-    var stockPredictionAccuracy = 1 - stockTestErrorRate
-
-    stockPredictionAccuracy = BigDecimal(stockPredictionAccuracy).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-    val logger = Logger[StockPredictor.type]
-    logger.info("Stock Prediction Accuracy with Logistic Regression: " + BigDecimal(stockPredictionAccuracy) * 100 + "%")
-  }
 
   private def calculateStockTestErrorRate(spark: SparkSession): Double = {
 
@@ -69,7 +55,7 @@ object StockPredictor {
 
   private def readStockDataset(spark: SparkSession, stockSchema: StructType): DataFrame = {
 
-    val stockDatasetPath = "Smarket.csv"
+    val stockDatasetPath = "/FileStore/tables/cc2q92oy1487102893777/Smarket.csv"
     spark.read
       .format("com.databricks.spark.csv")
       .option("header", "true")
@@ -100,7 +86,6 @@ object StockPredictor {
   private def evaluateStockProbability(probabilityVector: DataFrame): util.ArrayList[String] = {
 
     val predictedStockDirection = new util.ArrayList[String]
-
     for (stockProbabilities <- probabilityVector.collect()) {
 
       val stockProbability = stockProbabilities.apply(0).asInstanceOf[DenseVector].apply(0)
@@ -131,4 +116,3 @@ object StockPredictor {
     }
     return stockTestErrorSum / upTotal
   }
-}
